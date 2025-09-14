@@ -4,3 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+core_affinity = "*"
+
+
+[features]
+baseline = []   # FLAG=Release/Acquire
+relaxed = []   # FLAG=Relaxed（デフォにしたければ下で default に入れる）
+default = ["relaxed"]

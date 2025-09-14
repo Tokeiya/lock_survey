@@ -1,55 +1,75 @@
+use std::hint::spin_loop;
+use std::sync::Barrier;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, Barrier, Condvar};
-
-static mut DATA: u64 = 0;
-
-static FLAG: AtomicBool = AtomicBool::new(false);
+use std::thread;
+#[repr(align(128))]
+struct Data(AtomicUsize);
+#[repr(align(128))]
+struct Flag(AtomicBool);
+static BARRIER: Barrier = Barrier::new(4);
+static DATA: Data = Data(AtomicUsize::new(0));
+static FLG: Flag = Flag(AtomicBool::new(false));
 static ORDERED: AtomicUsize = AtomicUsize::new(0);
 static UNORDERED: AtomicUsize = AtomicUsize::new(0);
+const SIZE: usize = 100_000_000;
 fn main() {
-	for i in 0..100_000_000u64 {
-		trial(i);
-
-		if i & 0x7f_ff == 0 {
-			println!("i:{i} {}%", i as f64 / 100_000_000f64 * 100f64);
-		}
-	}
-
-	println!(
-		"Ordered:{} Unordered:{}",
-		ORDERED.load(Ordering::Relaxed),
-		UNORDERED.load(Ordering::Relaxed)
-	);
+	let release_thread = thread::spawn(|| release());
+	let sub_acquire_thread = thread::spawn(|| sub_acquire());
+	let acquire_thread1 = thread::spawn(|| acquire());
+	let acquire_thread2 = thread::spawn(|| acquire());
+	release_thread.join().unwrap();
+	sub_acquire_thread.join().unwrap();
+	acquire_thread1.join().unwrap();
+	acquire_thread2.join().unwrap();
+	println!("done");
 }
-
-fn trial(val: u64) {
-	let barrier_a = Arc::new(Barrier::new(2));
-	let barrier_b = barrier_a.clone();
-
-	let a = std::thread::spawn(move || {
-		barrier_a.wait();
-		unsafe {
-			DATA = val;
+fn release() {
+	for i in 0..SIZE {
+		BARRIER.wait();
+		thread::yield_now();
+		DATA.0.store(i, Ordering::Relaxed);
+		FLG.0.store(true, Ordering::Relaxed);
+		BARRIER.wait();
+	}
+}
+fn sub_acquire() {
+	for i in 0..SIZE {
+		BARRIER.wait();
+		while !FLG.0.load(Ordering::Relaxed) {
+			spin_loop();
 		}
-
-		FLAG.store(true, Ordering::Relaxed);
-	});
-
-	let b = std::thread::spawn(move || {
-		barrier_b.wait();
-		while !FLAG.load(Ordering::Relaxed) {}
-		let loaded = unsafe { DATA };
-
-		if loaded == val {
+		let observed = DATA.0.load(Ordering::Relaxed);
+		if observed == i {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
-			println!("Val:{} DATA:{} loaded:{}", val, unsafe { DATA }, loaded);
 		}
-	});
-
-	a.join().unwrap();
-	b.join().unwrap();
-
-	FLAG.store(false, Ordering::Relaxed);
+		BARRIER.wait();
+	}
+}
+fn acquire() {
+	for i in 0..SIZE {
+		BARRIER.wait();
+		while !FLG.0.load(Ordering::Relaxed) {
+			spin_loop();
+		}
+		let observed = DATA.0.load(Ordering::Relaxed);
+		if observed == i {
+			ORDERED.fetch_add(1, Ordering::Relaxed);
+		} else {
+			UNORDERED.fetch_add(1, Ordering::Relaxed);
+		}
+		if i & 0xff == 0 {
+			println!(
+				"{}/{} {:.2}% ordered:{} unordered:{}",
+				i,
+				SIZE,
+				i as f64 / SIZE as f64 * 100.0,
+				ORDERED.load(Ordering::Relaxed),
+				UNORDERED.load(Ordering::Relaxed)
+			);
+		}
+		BARRIER.wait();
+		FLG.0.store(false, Ordering::Relaxed);
+	}
 }
