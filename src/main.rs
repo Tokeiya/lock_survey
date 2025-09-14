@@ -14,9 +14,9 @@ static UNORDERED: AtomicUsize = AtomicUsize::new(0);
 const SIZE: usize = 100_000_000;
 fn main() {
 	let release_thread = thread::spawn(|| release());
-	let sub_acquire_thread = thread::spawn(|| sub_acquire());
-	let acquire_thread1 = thread::spawn(|| acquire());
-	let acquire_thread2 = thread::spawn(|| acquire());
+	let sub_acquire_thread = thread::spawn(|| acquire());
+	let acquire_thread1 = thread::spawn(|| sub_acquire());
+	let acquire_thread2 = thread::spawn(|| sub_acquire());
 	release_thread.join().unwrap();
 	sub_acquire_thread.join().unwrap();
 	acquire_thread1.join().unwrap();
@@ -59,7 +59,7 @@ fn acquire() {
 		} else {
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}
-		if i & 0xff == 0 {
+		if i & 0x7fff == 0 {
 			println!(
 				"{}/{} {:.2}% ordered:{} unordered:{}",
 				i,
