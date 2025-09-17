@@ -39,6 +39,7 @@ impl Writer {
 			match datum {
 				ChannelData::Write(value) => {
 					wtr.write(value.as_bytes()).unwrap();
+					wtr.flush().unwrap();
 				}
 				ChannelData::Terminate => break,
 			}

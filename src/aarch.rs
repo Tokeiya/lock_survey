@@ -47,7 +47,7 @@ fn sub_acquire(id: usize) {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
 			WRITER
-				.write(format!("{},{},{},{}", id, SIZE, i, observed))
+				.write(format!("{},{},{},{}\n", id, SIZE, i, observed))
 				.unwrap();
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}
@@ -65,7 +65,7 @@ fn acquire(id: usize) {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
 			WRITER
-				.write(format!("{},{},{},{}", id, SIZE, i, observed))
+				.write(format!("{},{},{},{}\n", id, SIZE, i, observed))
 				.unwrap();
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}

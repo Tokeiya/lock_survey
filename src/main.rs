@@ -20,6 +20,9 @@ pub static WRITER: LazyLock<Writer> =
 	LazyLock::new(move || Writer::new(100, create_file_data("./foo")));
 
 fn main() {
-	WRITER.write_str("hello").unwrap();
-	WRITER.terminate();
+	WRITER
+		.write_str("thread_id,size,expected,actual\n")
+		.unwrap();
+
+	aarch::run();
 }
