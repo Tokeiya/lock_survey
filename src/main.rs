@@ -1,75 +1,25 @@
-use std::hint::spin_loop;
-use std::sync::Barrier;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::thread;
-#[repr(align(128))]
-struct Data(AtomicUsize);
-#[repr(align(128))]
-struct Flag(AtomicBool);
-static BARRIER: Barrier = Barrier::new(4);
-static DATA: Data = Data(AtomicUsize::new(0));
-static FLG: Flag = Flag(AtomicBool::new(false));
-static ORDERED: AtomicUsize = AtomicUsize::new(0);
-static UNORDERED: AtomicUsize = AtomicUsize::new(0);
-const SIZE: usize = 100_000_000;
+mod aarch;
+mod channel_data;
+mod dummy_data;
+mod writer;
+mod writer_error;
+
+use crate::writer::Writer;
+use chrono::Local;
+use std::fs::File;
+use std::sync::LazyLock;
+
+fn create_file_data(path: &str) -> File {
+	let now = Local::now();
+	let a = now.format("%y_%m_%d_%H_%M.txt").to_string();
+
+	File::create(format!("{}{}", path, a)).unwrap()
+}
+
+pub static WRITER: LazyLock<Writer> =
+	LazyLock::new(move || Writer::new(100, create_file_data("./foo")));
+
 fn main() {
-	let release_thread = thread::spawn(|| release());
-	let sub_acquire_thread = thread::spawn(|| acquire());
-	let acquire_thread1 = thread::spawn(|| sub_acquire());
-	let acquire_thread2 = thread::spawn(|| sub_acquire());
-	release_thread.join().unwrap();
-	sub_acquire_thread.join().unwrap();
-	acquire_thread1.join().unwrap();
-	acquire_thread2.join().unwrap();
-	println!("done");
-}
-fn release() {
-	for i in 0..SIZE {
-		BARRIER.wait();
-		thread::yield_now();
-		DATA.0.store(i, Ordering::Relaxed);
-		FLG.0.store(true, Ordering::Relaxed);
-		BARRIER.wait();
-	}
-}
-fn sub_acquire() {
-	for i in 0..SIZE {
-		BARRIER.wait();
-		while !FLG.0.load(Ordering::Relaxed) {
-			spin_loop();
-		}
-		let observed = DATA.0.load(Ordering::Relaxed);
-		if observed == i {
-			ORDERED.fetch_add(1, Ordering::Relaxed);
-		} else {
-			UNORDERED.fetch_add(1, Ordering::Relaxed);
-		}
-		BARRIER.wait();
-	}
-}
-fn acquire() {
-	for i in 0..SIZE {
-		BARRIER.wait();
-		while !FLG.0.load(Ordering::Relaxed) {
-			spin_loop();
-		}
-		let observed = DATA.0.load(Ordering::Relaxed);
-		if observed == i {
-			ORDERED.fetch_add(1, Ordering::Relaxed);
-		} else {
-			UNORDERED.fetch_add(1, Ordering::Relaxed);
-		}
-		if i & 0x7fff == 0 {
-			println!(
-				"{}/{} {:.2}% ordered:{} unordered:{}",
-				i,
-				SIZE,
-				i as f64 / SIZE as f64 * 100.0,
-				ORDERED.load(Ordering::Relaxed),
-				UNORDERED.load(Ordering::Relaxed)
-			);
-		}
-		BARRIER.wait();
-		FLG.0.store(false, Ordering::Relaxed);
-	}
+	WRITER.write_str("hello").unwrap();
+	WRITER.terminate();
 }

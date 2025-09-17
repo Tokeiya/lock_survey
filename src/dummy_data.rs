@@ -1,4 +1,3 @@
-use std::alloc::{Layout, alloc_zeroed, dealloc};
 use std::hint::black_box;
 use std::sync::atomic::AtomicUsize;
 
