@@ -1,6 +1,7 @@
 mod aarch;
 mod channel_data;
 mod dummy_data;
+mod interl_arch;
 mod writer;
 mod writer_error;
 
@@ -20,9 +21,5 @@ pub static WRITER: LazyLock<Writer> =
 	LazyLock::new(move || Writer::new(100, create_file_data("./foo")));
 
 fn main() {
-	WRITER
-		.write_str("thread_id,size,expected,actual\n")
-		.unwrap();
-
-	aarch::run();
+	interl_arch::run();
 }
