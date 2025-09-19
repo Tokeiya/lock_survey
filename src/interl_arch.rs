@@ -5,7 +5,6 @@ use std::thread;
 
 #[repr(align(128))]
 struct Data(AtomicUsize);
-
 struct Result(AtomicBool);
 
 static X: Data = Data(AtomicUsize::new(0));
