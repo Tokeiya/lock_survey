@@ -64,11 +64,11 @@ fn proc_a() {
 			spin_loop()
 		}
 		BARRIER.wait();
-		X.0.store(1, Ordering::Relaxed);
+		X.0.store(1, Ordering::SeqCst);
 
 		//		fence(Ordering::SeqCst);
 
-		if Y.0.load(Ordering::Relaxed) == 0 {
+		if Y.0.load(Ordering::SeqCst) == 0 {
 			X_RESULT.0.store(true, Ordering::SeqCst);
 		}
 		BARRIER.wait();
@@ -86,11 +86,11 @@ fn proc_b() {
 		}
 
 		BARRIER.wait();
-		Y.0.store(1, Ordering::Relaxed);
+		Y.0.store(1, Ordering::SeqCst);
 
 		//		fence(Ordering::SeqCst);
 
-		if X.0.load(Ordering::Relaxed) == 0 {
+		if X.0.load(Ordering::SeqCst) == 0 {
 			Y_RESULT.0.store(true, Ordering::SeqCst);
 		}
 		BARRIER.wait();
