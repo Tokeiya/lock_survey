@@ -1,5 +1,5 @@
 use std::hint::spin_loop;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering, fence};
 use std::sync::{Arc, Barrier, LazyLock, Mutex};
 use std::thread;
 
@@ -32,7 +32,6 @@ pub fn run() {
 
 fn observe() {
 	for i in 0..SIZE {
-		BARRIER.wait();
 		X.0.store(0, Ordering::Release);
 		Y.0.store(0, Ordering::Release);
 		X_RESULT.0.store(false, Ordering::Release);
@@ -47,7 +46,7 @@ fn observe() {
 			);
 		}
 		BARRIER.wait();
-		if !X_RESULT.0.load(Ordering::Acquire) && !Y_RESULT.0.load(Ordering::Acquire) {
+		if X_RESULT.0.load(Ordering::SeqCst) && Y_RESULT.0.load(Ordering::SeqCst) {
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
@@ -57,7 +56,6 @@ fn observe() {
 
 fn proc_a() {
 	for _ in 0..SIZE {
-		BARRIER.wait();
 		while X.0.load(Ordering::Acquire) != 0 || Y.0.load(Ordering::Acquire) != 0 {
 			spin_loop()
 		}
@@ -68,8 +66,10 @@ fn proc_a() {
 		BARRIER.wait();
 		X.0.store(1, Ordering::Relaxed);
 
+		//		fence(Ordering::SeqCst);
+
 		if Y.0.load(Ordering::Relaxed) == 0 {
-			X_RESULT.0.store(true, Ordering::Release);
+			X_RESULT.0.store(true, Ordering::SeqCst);
 		}
 		BARRIER.wait();
 	}
@@ -77,7 +77,6 @@ fn proc_a() {
 
 fn proc_b() {
 	for _ in 0..SIZE {
-		BARRIER.wait();
 		while X.0.load(Ordering::Acquire) != 0 || Y.0.load(Ordering::Acquire) != 0 {
 			spin_loop()
 		}
@@ -85,11 +84,14 @@ fn proc_b() {
 		while X_RESULT.0.load(Ordering::Acquire) || Y_RESULT.0.load(Ordering::Acquire) {
 			spin_loop()
 		}
+
 		BARRIER.wait();
 		Y.0.store(1, Ordering::Relaxed);
 
+		//		fence(Ordering::SeqCst);
+
 		if X.0.load(Ordering::Relaxed) == 0 {
-			Y_RESULT.0.store(true, Ordering::Release);
+			Y_RESULT.0.store(true, Ordering::SeqCst);
 		}
 		BARRIER.wait();
 	}
