@@ -2,7 +2,6 @@ mod aarch;
 mod channel_data;
 mod intel_arch;
 mod writer;
-mod writer_error;
 
 use crate::writer::Writer;
 use chrono::Local;

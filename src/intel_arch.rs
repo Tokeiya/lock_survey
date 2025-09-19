@@ -5,6 +5,7 @@ use std::thread;
 
 #[repr(align(128))]
 struct Data(AtomicUsize);
+
 struct Result(AtomicBool);
 
 static X: Data = Data(AtomicUsize::new(0));
@@ -53,6 +54,7 @@ fn observe() {
 	}
 }
 
+//noinspection DuplicatedCode
 fn proc_a() {
 	for _ in 0..SIZE {
 		while X.0.load(Ordering::Acquire) != 0 || Y.0.load(Ordering::Acquire) != 0 {
@@ -74,6 +76,7 @@ fn proc_a() {
 	}
 }
 
+//noinspection DuplicatedCode
 fn proc_b() {
 	for _ in 0..SIZE {
 		while X.0.load(Ordering::Acquire) != 0 || Y.0.load(Ordering::Acquire) != 0 {
