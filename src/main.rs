@@ -26,11 +26,5 @@ pub static WRITER: LazyLock<Writer> =
 	LazyLock::new(move || Writer::new(100, create_file_data("./foo")));
 
 fn main() {
-	let mut buf = String::new();
-
-	println!("{:?}", get_temp());
-	std::thread::sleep(std::time::Duration::from_secs(1));
-	println!("{:?}", get_temp());
-
-	//aarch::run();
+	aarch::run();
 }
