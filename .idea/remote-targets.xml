@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="RemoteTargetsManager">
+    <targets>
+      <target name="rust_rover@plastic:22" type="ssh/sftp" uuid="d70cc88e-4d94-487a-8e9f-320971ddd139">
+        <config>
+          <option name="projectRootOnTarget" value="/home/rust_rover/lock_survey" />
+          <option name="serverName" value="rust_rover@plastic:22 agent" />
+          <option name="useRsync" value="true" />
+        </config>
+        <ContributedStateBase type="RsLanguageRuntime">
+          <config>
+            <option name="cargoPath" value="/home/rust_rover/.cargo/bin/cargo" />
+            <option name="cargoVersion" value="1.92.0-nightly (966f94733 2025-09-16)" />
+            <option name="rustcPath" value="/home/rust_rover/.cargo/bin/rustc" />
+            <option name="rustcVersion" value="1.92.0-nightly (dd7fda570 2025-09-20)" />
+          </config>
+        </ContributedStateBase>
+      </target>
+      <target name="rust_rover@clear:22" type="ssh/sftp" uuid="b1593f9b-7e90-4e5e-ac63-9ea14b76343b">
+        <config>
+          <option name="projectRootOnTarget" value="/home/rust_rover/lock_survey" />
+          <option name="serverName" value="rust_rover@clear:22 agent" />
+          <option name="useRsync" value="true" />
+        </config>
+        <ContributedStateBase type="RsLanguageRuntime">
+          <config>
+            <option name="cargoPath" value="/home/rust_rover/.cargo/bin/cargo" />
+            <option name="cargoVersion" value="1.92.0-nightly (966f94733 2025-09-16)" />
+            <option name="rustcPath" value="/home/rust_rover/.cargo/bin/rustc" />
+            <option name="rustcVersion" value="1.92.0-nightly (dd7fda570 2025-09-20)" />
+          </config>
+        </ContributedStateBase>
+      </target>
+      <target name="tokeiya3@clear:22" type="ssh/sftp" uuid="799ca5d8-7718-4825-8df6-f3c93bf33a02">
+        <config>
+          <option name="projectRootOnTarget" value="$USER_HOME$/lock_survey" />
+          <option name="serverName" value="tokeiya3@clear:22 agent" />
+          <option name="useRsync" value="true" />
+        </config>
+        <ContributedStateBase type="RsLanguageRuntime">
+          <config>
+            <option name="cargoPath" value="fish: Variables cannot be bracketed. In fish, please use {$SHELL}." />
+            <option name="cargoVersion" value="fish: Variables cannot be bracketed. In fish, please use {$SHELL}." />
+            <option name="rustcPath" value="fish: Variables cannot be bracketed. In fish, please use {$SHELL}." />
+            <option name="rustcVersion" value="fish: Variables cannot be bracketed. In fish, please use {$SHELL}." />
+          </config>
+        </ContributedStateBase>
+      </target>
+    </targets>
+  </component>
+</project>

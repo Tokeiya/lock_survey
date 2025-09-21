@@ -13,7 +13,7 @@ static DATA: Data = Data(AtomicUsize::new(0));
 static FLG: Flag = Flag(AtomicBool::new(false));
 static ORDERED: AtomicUsize = AtomicUsize::new(0);
 static UNORDERED: AtomicUsize = AtomicUsize::new(0);
-const SIZE: usize = 100_000_000;
+const SIZE: usize = 10_000_000;
 
 pub fn run() {
 	let release_thread = thread::spawn(|| release());
