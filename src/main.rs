@@ -6,13 +6,9 @@ mod interl_arch;
 mod writer;
 mod writer_error;
 
-use crate::env_reporter::get_temp;
 use crate::writer::Writer;
 use chrono::Local;
-use std::fs;
 use std::fs::File;
-use std::io::Read;
-use std::path::Path;
 use std::sync::LazyLock;
 
 fn create_file_data(path: &str) -> File {
@@ -23,7 +19,10 @@ fn create_file_data(path: &str) -> File {
 }
 
 pub static WRITER: LazyLock<Writer> =
-	LazyLock::new(move || Writer::new(100, create_file_data("./foo")));
+	LazyLock::new(move || Writer::new(100, create_file_data("./unordered")));
+
+// pub static SUMMARY: LazyLock<Writer> =
+// 	LazyLock::new(move || Writer::new(100, create_file_data("./summary")));
 
 fn main() {
 	aarch::run();

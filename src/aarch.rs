@@ -35,6 +35,19 @@ fn release() {
 		DATA.0.store(i, Ordering::Relaxed);
 		FLG.0.store(true, Ordering::Relaxed);
 		BARRIER.wait();
+
+		if i & 0x7fff == 0 {
+			println!(
+				"{:.2}℃  {}/{} {:.2}% ordered:{} unordered:{}",
+				get_temp().unwrap_or_else(|_| 0.0),
+				i,
+				SIZE,
+				i as f64 / SIZE as f64 * 100.0,
+				ORDERED.load(Ordering::Relaxed),
+				UNORDERED.load(Ordering::Relaxed)
+			);
+		}
+		FLG.0.store(false, Ordering::Relaxed);
 	}
 }
 fn sub_acquire(id: usize) {
@@ -48,7 +61,14 @@ fn sub_acquire(id: usize) {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
 			WRITER
-				.write(format!("{},{},{},{}\n", id, SIZE, i, observed))
+				.write(format!(
+					"{},{},{},{},{}\n",
+					get_temp().unwrap_or_else(|_| 0.0),
+					id,
+					SIZE,
+					i,
+					observed
+				))
 				.unwrap();
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}
@@ -70,19 +90,9 @@ fn acquire(id: usize) {
 				.unwrap();
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}
-		if i & 0x7fff == 0 {
-			println!(
-				"{:.2}℃  {}/{} {:.2}% ordered:{} unordered:{}",
-				//get_temp(),
-				"N/A",
-				i,
-				SIZE,
-				i as f64 / SIZE as f64 * 100.0,
-				ORDERED.load(Ordering::Relaxed),
-				UNORDERED.load(Ordering::Relaxed)
-			);
-		}
 		BARRIER.wait();
-		FLG.0.store(false, Ordering::Relaxed);
+		//
+		//
+		// FLG.0.store(false, Ordering::Relaxed);
 	}
 }

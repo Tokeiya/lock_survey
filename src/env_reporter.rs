@@ -1,7 +1,7 @@
-use std::cell::{Cell, RefCell};
+use std::cell::RefCell;
 use std::fs::File;
 use std::io;
-use std::io::{Error as IoError, Read, Result as IoResult, Seek, SeekFrom};
+use std::io::{Read, Result as IoResult, Seek, SeekFrom};
 use std::str::FromStr;
 
 pub fn get_temp() -> IoResult<f64> {
