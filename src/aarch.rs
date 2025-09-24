@@ -16,6 +16,9 @@ static ORDERED: AtomicUsize = AtomicUsize::new(0);
 static UNORDERED: AtomicUsize = AtomicUsize::new(0);
 const SIZE: usize = 10_000_000;
 
+const RELEASE: Ordering = Ordering::Relaxed;
+const ACQUIRE: Ordering = Ordering::Relaxed;
+
 pub fn run() {
 	let release_thread = thread::spawn(|| release());
 	let sub_acquire_thread = thread::spawn(|| acquire(1));
@@ -32,8 +35,8 @@ fn release() {
 	for i in 0..SIZE {
 		BARRIER.wait();
 		thread::yield_now();
-		DATA.0.store(i, Ordering::Relaxed);
-		FLG.0.store(true, Ordering::Relaxed);
+		DATA.0.store(i, RELEASE);
+		FLG.0.store(true, RELEASE);
 		BARRIER.wait();
 
 		if i & 0x7fff == 0 {
@@ -53,10 +56,10 @@ fn release() {
 fn sub_acquire(id: usize) {
 	for i in 0..SIZE {
 		BARRIER.wait();
-		while !FLG.0.load(Ordering::Relaxed) {
+		while !FLG.0.load(ACQUIRE) {
 			spin_loop();
 		}
-		let observed = DATA.0.load(Ordering::Relaxed);
+		let observed = DATA.0.load(ACQUIRE);
 		if observed == i {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
@@ -81,9 +84,9 @@ fn acquire(id: usize) {
 		while !FLG.0.load(Ordering::Relaxed) {
 			spin_loop();
 		}
-		let observed = DATA.0.load(Ordering::Relaxed);
+		let observed = DATA.0.load(ACQUIRE);
 		if observed == i {
-			ORDERED.fetch_add(1, Ordering::Relaxed);
+			ORDERED.fetch_add(1, ACQUIRE);
 		} else {
 			WRITER
 				.write(format!("{},{},{},{}\n", id, SIZE, i, observed))
@@ -91,8 +94,5 @@ fn acquire(id: usize) {
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}
 		BARRIER.wait();
-		//
-		//
-		// FLG.0.store(false, Ordering::Relaxed);
 	}
 }
