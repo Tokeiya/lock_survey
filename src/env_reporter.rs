@@ -1,17 +1,21 @@
 use std::cell::{Cell, RefCell};
 use std::fs::File;
-use std::io::{Read, Seek, SeekFrom};
+use std::io;
+use std::io::{Error as IoError, Read, Result as IoResult, Seek, SeekFrom};
 use std::str::FromStr;
-use std::sync::LazyLock;
-pub fn get_temp() -> f64 {
+
+pub fn get_temp() -> IoResult<f64> {
 	thread_local! {
-	 static FILE:RefCell<File> =RefCell::new(File::open("/sys/class/thermal/thermal_zone0/temp").unwrap());
+	 static FILE:RefCell<IoResult<File>> =RefCell::new(File::open("/sys/class/thermal/thermal_zone0/temp"));
 	}
 
-	FILE.with_borrow_mut(|file| {
-		let mut buff = String::new();
-		_ = file.seek(SeekFrom::Start(0));
-		file.read_to_string(&mut buff).unwrap();
-		f64::from_str(buff.trim()).unwrap() / 1000.0
+	FILE.with_borrow_mut(|file| match file {
+		Ok(x) => {
+			let mut buff = String::new();
+			_ = x.seek(SeekFrom::Start(0));
+			_ = x.read_to_string(&mut buff)?;
+			Ok(f64::from_str(buff.trim()).unwrap() / 1000.0)
+		}
+		Err(err) => return Err(io::Error::new(err.kind(), err.to_string())),
 	})
 }

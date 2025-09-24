@@ -73,7 +73,8 @@ fn acquire(id: usize) {
 		if i & 0x7fff == 0 {
 			println!(
 				"{:.2}℃  {}/{} {:.2}% ordered:{} unordered:{}",
-				get_temp(),
+				//get_temp(),
+				"N/A",
 				i,
 				SIZE,
 				i as f64 / SIZE as f64 * 100.0,
