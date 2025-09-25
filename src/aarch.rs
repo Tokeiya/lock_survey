@@ -65,7 +65,7 @@ fn release() {
 			#[rustfmt::skip]
 			WRITER
 				.write(format! {
-					r#"{{cat:"summary",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+					r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
 "#})
 				.unwrap();
 		}

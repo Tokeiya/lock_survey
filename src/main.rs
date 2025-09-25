@@ -22,5 +22,6 @@ pub static WRITER: LazyLock<Writer> =
 	LazyLock::new(move || Writer::new(100, create_file_data("./unordered")));
 
 fn main() {
-	aarch::run();
+	//aarch::run();
+	interl_arch::run();
 }
