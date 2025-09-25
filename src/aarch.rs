@@ -85,8 +85,8 @@ r#"{{cat:"summary",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
 
 	WRITER
 		.write(format! {
-					r#"{{cat:"summary",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
-		"#})
+r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+"#})
 		.unwrap();
 }
 fn acquire(id: usize) {
@@ -114,7 +114,7 @@ fn acquire(id: usize) {
 		if flg {
 			WRITER
 				.write(format!(
-					r#"{{"cat:"immd","temp":{:.2},"id":{},"size":{},"i":{},"observed":{}}}
+					r#"{{"cat:"immd",type:"aarch","temp":{:.2},"id":{},"size":{},"i":{},"observed":{}}}
 "#,
 					tmp, id, SIZE, i, observed
 				))
