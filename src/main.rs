@@ -21,9 +21,6 @@ fn create_file_data(path: &str) -> File {
 pub static WRITER: LazyLock<Writer> =
 	LazyLock::new(move || Writer::new(100, create_file_data("./unordered")));
 
-// pub static SUMMARY: LazyLock<Writer> =
-// 	LazyLock::new(move || Writer::new(100, create_file_data("./summary")));
-
 fn main() {
 	aarch::run();
 }
