@@ -62,9 +62,10 @@ fn release() {
 				i as f64 / SIZE as f64 * 100.0
 			);
 
+			#[rustfmt::skip]
 			WRITER
 				.write(format! {
-r#"{{cat:"summary",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+					r#"{{cat:"summary",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
 "#})
 				.unwrap();
 		}
@@ -77,16 +78,13 @@ r#"{{cat:"summary",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
 
 	println!(
 		"{:.2}℃  {}/{} {:.2}% ordered:{ordered} unordered:{unordered}",
-		tmp,
-		SIZE,
-		SIZE,
-		SIZE as f64 / SIZE as f64 * 100.0
+		tmp, SIZE, SIZE, 100.0
 	);
 
 	WRITER
 		.write(format! {
-r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
-"#})
+				r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+		"#})
 		.unwrap();
 }
 fn acquire(id: usize) {
