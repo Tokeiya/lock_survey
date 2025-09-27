@@ -48,7 +48,7 @@ fn release() {
 		BARRIER.wait();
 
 		if i & PERIOD == 0 {
-			let tmp = get_temp().unwrap_or_else(|_| 0.0);
+			let tmp = get_temp().unwrap_or(0.0);
 			let ordered = ORDERED.load(Ordering::Relaxed);
 			let unordered = UNORDERED.load(Ordering::Relaxed);
 
@@ -77,9 +77,8 @@ fn release() {
 	);
 
 	WRITER
-		.write(format! {
-				r#"{{"count":{SIZE},cat:"summary",type:"aarch",temp:{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
-		"#})
+		.write(format!(r#"{{"count":{SIZE},cat:"summary",type:"aarch",temp:{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
+"#))
 		.unwrap();
 }
 fn acquire(id: usize) {
@@ -103,8 +102,7 @@ fn acquire(id: usize) {
 
 		if flg {
 			WRITER
-				.write(format!(
-					r#"{{"cat":"immd","type":"aarch","temp":{tmp:.2},"id":{id},"size":{SIZE},"i":{i},"observed":{observed}}}
+				.write(format!(r#"{{"cat":"immd","type":"aarch","temp":{tmp:.2},"id":{id},"size":{SIZE},"i":{i},"observed":{observed}}}
 "#)).unwrap();
 
 			flg = false;

@@ -1,9 +1,9 @@
 mod aarch;
 mod channel_data;
 mod env_reporter;
-mod interl_arch;
 mod writer;
 mod writer_error;
+mod x_86_64_arch;
 
 use crate::writer::Writer;
 use chrono::Local;
@@ -19,12 +19,12 @@ fn create_file_data(path: &str) -> File {
 }
 
 pub static WRITER: LazyLock<Writer> =
-	LazyLock::new(move || Writer::new(100, create_file_data("./unordered")));
+	LazyLock::new(move || Writer::new(100, create_file_data("./log")));
 
 fn main() {
 	println!("aarch_64");
 	aarch::run();
 
 	println!("x86_64");
-	interl_arch::run();
+	x_86_64_arch::run();
 }
