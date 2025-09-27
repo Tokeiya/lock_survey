@@ -2,7 +2,7 @@ use crate::WRITER;
 use crate::env_reporter::get_temp;
 use std::hint::spin_loop;
 use std::sync::Barrier;
-use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering, fence};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
 
 #[repr(align(128))]
@@ -42,27 +42,48 @@ fn observe() {
 		BARRIER.wait();
 
 		if i & PERIOD == 0 {
-			let tmp = get_temp().unwrap_or_else(|_| 0.0);
+			let tmp = get_temp().unwrap_or(0.0);
 			let ordered = ORDERED.load(Ordering::Acquire);
 			let unordered = UNORDERED.load(Ordering::Acquire);
 
 			println!(
-				"{tmp} {i}/{SIZE} {:.2}% ordered:{ordered} unordered:{unordered}",
+				"{tmp:.2} {i}/{SIZE} {:.2}% ordered:{ordered} unordered:{unordered}",
 				i as f64 / SIZE as f64 * 100.0
 			);
 
 			#[rustfmt::skip]
-			WRITER.write(format!(r#"{{"cat":"summary","type":"intel","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
+			WRITER.write(format!(r#"{{"count":{i},"cat":"summary","type":"x86_64","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 "#)).unwrap();
 		}
 
 		BARRIER.wait();
+
 		if X_RESULT.0.load(Ordering::SeqCst) && Y_RESULT.0.load(Ordering::SeqCst) {
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
+
+			let tmp = get_temp().unwrap_or(0.0);
+			let ordered = ORDERED.load(Ordering::Relaxed);
+			let unordered = UNORDERED.load(Ordering::Relaxed);
+
+			println!("{tmp:.2} {i} ordered:{ordered} unordered:{unordered}");
+
+			#[rustfmt::skip]
+			WRITER.write(format!(r#"{{"count":{i},"cat":"immd","type":"x86_64","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
+"#)).unwrap();
 		} else {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		}
 	}
+
+	let tmp = get_temp().unwrap_or(0.0);
+	let ordered = ORDERED.load(Ordering::Acquire);
+	let unordered = UNORDERED.load(Ordering::Acquire);
+
+	println!("{tmp:.2} {SIZE}/{SIZE} 100.00% ordered:{ordered} unordered:{unordered}",);
+
+	#[rustfmt::skip]
+			WRITER.write(format!(r#"{{"count":{SIZE},"cat":"summary","type":"intel","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
+"#)).unwrap();
 }
 
 fn proc_a() {

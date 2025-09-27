@@ -1,6 +1,8 @@
+//HOGEMOGE
+
 use crate::WRITER;
 use crate::env_reporter::get_temp;
-use std::hint::{black_box, spin_loop};
+use std::hint::spin_loop;
 use std::sync::Barrier;
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::thread;
@@ -9,8 +11,6 @@ use std::thread;
 struct Data(AtomicUsize);
 #[repr(align(128))]
 struct Flag(AtomicBool);
-#[repr(align(128))]
-struct Dummy(AtomicUsize);
 
 static BARRIER: Barrier = Barrier::new(4);
 static DATA: Data = Data(AtomicUsize::new(0));
@@ -53,24 +53,21 @@ fn release() {
 			let unordered = UNORDERED.load(Ordering::Relaxed);
 
 			println!(
-				"{:.2}℃  {}/{} {:.2}% ordered:{ordered} unordered:{unordered}",
-				tmp,
-				i,
-				SIZE,
+				"{tmp:.2}℃  {i}/{SIZE} {:.2}% ordered:{ordered} unordered:{unordered}",
 				i as f64 / SIZE as f64 * 100.0
 			);
 
 			#[rustfmt::skip]
 			WRITER
 				.write(format! {
-					r#"{{"cat":"summary","type":"aarch","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
+					r#"{{"count":{i},"cat":"summary","type":"aarch","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 "#})
 				.unwrap();
 		}
 		FLG.0.store(false, Ordering::Relaxed);
 	}
 
-	let tmp = get_temp().unwrap_or_else(|_| 0.0);
+	let tmp = get_temp().unwrap_or(0.0);
 	let ordered = ORDERED.load(Ordering::Relaxed);
 	let unordered = UNORDERED.load(Ordering::Relaxed);
 
@@ -81,14 +78,13 @@ fn release() {
 
 	WRITER
 		.write(format! {
-				r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
+				r#"{{"count":{SIZE},cat:"summary",type:"aarch",temp:{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 		"#})
 		.unwrap();
 }
 fn acquire(id: usize) {
 	let mut tmp = 0f64;
 	let mut flg = false;
-	let mut accum = 0usize;
 
 	for i in 0..SIZE {
 		BARRIER.wait();
@@ -100,7 +96,7 @@ fn acquire(id: usize) {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
 		} else {
 			flg = true;
-			tmp = get_temp().unwrap_or_else(|_| 0.0);
+			tmp = get_temp().unwrap_or(0.0);
 			UNORDERED.fetch_add(1, Ordering::Relaxed);
 		}
 		BARRIER.wait();
@@ -108,15 +104,10 @@ fn acquire(id: usize) {
 		if flg {
 			WRITER
 				.write(format!(
-					r#"{{cat:"immd",type:"aarch","temp":{:.2},"id":{},"size":{},"i":{},"observed":{}}}
-"#,
-					tmp, id, SIZE, i, observed
-				))
-				.unwrap();
+					r#"{{"cat":"immd","type":"aarch","temp":{tmp:.2},"id":{id},"size":{SIZE},"i":{i},"observed":{observed}}}
+"#)).unwrap();
 
 			flg = false;
 		}
 	}
-
-	black_box(accum);
 }

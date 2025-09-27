@@ -1,15 +1,13 @@
 use crate::channel_data::ChannelData;
 use std::io::Write as IoWrite;
-use std::sync::atomic::AtomicBool;
+use std::sync::Mutex;
 use std::sync::mpsc::{Receiver, SendError, SyncSender, sync_channel};
-use std::sync::{Arc, Mutex};
 use std::thread;
 use std::thread::JoinHandle;
 
 pub struct Writer {
 	sender: SyncSender<ChannelData>,
 	handle: Mutex<Option<JoinHandle<()>>>,
-	flg: Arc<AtomicBool>,
 }
 
 impl Writer {
@@ -22,7 +20,6 @@ impl Writer {
 		Self {
 			sender: snd,
 			handle,
-			flg: Arc::new(AtomicBool::new(false)),
 		}
 	}
 
