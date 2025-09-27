@@ -73,7 +73,7 @@ fn proc_a() {
 		}
 		BARRIER.wait();
 		X.0.store(1, Ordering::Relaxed);
-		fence(Ordering::SeqCst);
+		// fence(Ordering::SeqCst);
 		if Y.0.load(Ordering::Relaxed) == 0 {
 			X_RESULT.0.store(true, Ordering::Relaxed);
 		}
@@ -93,7 +93,7 @@ fn proc_b() {
 
 		BARRIER.wait();
 		Y.0.store(1, Ordering::Relaxed);
-		fence(Ordering::SeqCst);
+		// fence(Ordering::SeqCst);
 		if X.0.load(Ordering::Relaxed) == 0 {
 			Y_RESULT.0.store(true, Ordering::Relaxed);
 		}

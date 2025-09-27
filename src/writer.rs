@@ -38,7 +38,7 @@ impl Writer {
 		for datum in rcv.iter() {
 			match datum {
 				ChannelData::Write(value) => {
-					wtr.write(value.as_bytes()).unwrap();
+					wtr.write_all(value.as_bytes()).unwrap();
 					wtr.flush().unwrap();
 				}
 				ChannelData::Terminate => break,
