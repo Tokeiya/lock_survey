@@ -46,10 +46,13 @@ fn observe() {
 			let ordered = ORDERED.load(Ordering::Acquire);
 			let unordered = UNORDERED.load(Ordering::Acquire);
 
-			println!("i:{i} temp:{tmp} ORDERD:{ordered} UNORDERED:{unordered}");
+			println!(
+				"{tmp} {i}/{SIZE} {:.2}% ordered:{ordered} unordered:{unordered}",
+				i as f64 / SIZE as f64 * 100.0
+			);
 
 			#[rustfmt::skip]
-			WRITER.write(format!(r#"{{cat:"summary",type:"intel",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+			WRITER.write(format!(r#"{{"cat":"summary","type":"intel","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 "#)).unwrap();
 		}
 

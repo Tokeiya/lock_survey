@@ -24,8 +24,8 @@ const SIZE: usize = PERIOD * 100;
 const RELEASE: Ordering = Ordering::Relaxed;
 const ACQUIRE: Ordering = Ordering::Relaxed;
 
-static DUMMY1: Dummy = Dummy(AtomicUsize::new(0));
-static DUMMY2: Dummy = Dummy(AtomicUsize::new(0));
+// static DUMMY1: Dummy = Dummy(AtomicUsize::new(0));
+// static DUMMY2: Dummy = Dummy(AtomicUsize::new(0));
 
 pub fn run() {
 	let release_thread = thread::spawn(|| release());
@@ -43,9 +43,7 @@ fn release() {
 	for i in 0..SIZE {
 		BARRIER.wait();
 		thread::yield_now();
-		DUMMY1.0.store(i, RELEASE);
 		DATA.0.store(i, RELEASE);
-		DUMMY2.0.store(i, RELEASE);
 		FLG.0.store(true, RELEASE);
 		BARRIER.wait();
 
@@ -65,7 +63,7 @@ fn release() {
 			#[rustfmt::skip]
 			WRITER
 				.write(format! {
-					r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+					r#"{{"cat":"summary","type":"aarch","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 "#})
 				.unwrap();
 		}
@@ -83,7 +81,7 @@ fn release() {
 
 	WRITER
 		.write(format! {
-				r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},ordered:{ordered},unordered:{unordered}}}
+				r#"{{cat:"summary",type:"aarch",temp:{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 		"#})
 		.unwrap();
 }
@@ -95,10 +93,8 @@ fn acquire(id: usize) {
 	for i in 0..SIZE {
 		BARRIER.wait();
 		while !FLG.0.load(ACQUIRE) {
-			accum += DUMMY1.0.load(ACQUIRE);
 			spin_loop();
 		}
-		accum += DUMMY2.0.load(ACQUIRE);
 		let observed = DATA.0.load(ACQUIRE);
 		if observed == i {
 			ORDERED.fetch_add(1, Ordering::Relaxed);
@@ -112,7 +108,7 @@ fn acquire(id: usize) {
 		if flg {
 			WRITER
 				.write(format!(
-					r#"{{"cat:"immd",type:"aarch","temp":{:.2},"id":{},"size":{},"i":{},"observed":{}}}
+					r#"{{cat:"immd",type:"aarch","temp":{:.2},"id":{},"size":{},"i":{},"observed":{}}}
 "#,
 					tmp, id, SIZE, i, observed
 				))
