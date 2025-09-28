@@ -65,8 +65,6 @@ fn observe() {
 			let ordered = ORDERED.load(Ordering::Relaxed);
 			let unordered = UNORDERED.load(Ordering::Relaxed);
 
-			println!("{tmp:.2} {i} ordered:{ordered} unordered:{unordered}");
-
 			#[rustfmt::skip]
 			WRITER.write(format!(r#"{{"count":{i},"cat":"immd","type":"x86_64","temp":{tmp:.2},"ordered":{ordered},"unordered":{unordered}}}
 "#)).unwrap();
