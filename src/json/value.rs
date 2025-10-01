@@ -51,8 +51,102 @@ impl From<HashMap<String, Value>> for Value {
 	}
 }
 
-fn escaped_string(s: &str) -> Cow<'_, str> {
-	todo!()
+fn is_contained_escape_char(s: &str) -> bool {
+	for elem in s.as_bytes() {
+		if elem & 0x80 != 0 {
+			continue;
+		}
+
+		match elem {
+			b'\"' => return true,
+			b'\\' => return true,
+			0x08 => return true, //backspace
+			0x0C => return true, //form feed
+			b'\n' => return true,
+			b'\r' => return true,
+			b'\t' => return true,
+			_ => continue,
+		}
+	}
+
+	false
+}
+
+fn escaped_string(scr: &str) -> Cow<str> {
+	if is_contained_escape_char(scr) {
+		let mut str = Vec::new();
+
+		for elem in scr.as_bytes() {
+			if elem & 0x80 != 0 {
+				str.push(*elem);
+			} else {
+				match elem {
+					b'\"' => {
+						str.push(b'\\');
+						str.push(b'\"');
+					}
+					b'\\' => {
+						str.push(b'\\');
+						str.push(b'\\');
+					}
+					0x08 => {
+						str.push(b'\\');
+						str.push(b'b');
+					} //backspace
+					0x0C => {
+						str.push(b'\\');
+						str.push(b'f');
+					} //form feed
+					b'\n' => {
+						str.push(b'\\');
+						str.push(b'n');
+					}
+					b'\r' => {
+						str.push(b'\\');
+						str.push(b'r');
+					}
+					b'\t' => {
+						str.push(b'\\');
+						str.push(b't');
+					}
+					_ => {
+						str.push(*elem);
+					}
+				}
+			}
+		}
+		Cow::Owned(String::from_utf8(str).unwrap())
+	} else {
+		Cow::Borrowed(scr)
+	}
+}
+
+fn array_to_str(arr: &[Value]) -> String {
+	let mut str = String::new();
+
+	for elem in arr {
+		str.push_str(&elem.to_string());
+		str.push(',');
+	}
+
+	str.pop();
+	str
+}
+
+fn object_to_str(obj: &HashMap<String, Value>) -> String {
+	let mut str = String::new();
+
+	for (k, v) in obj.iter() {
+		str.push('"');
+		str.push_str(&escaped_string(k));
+		str.push('"');
+		str.push(':');
+		str.push_str(&v.to_string());
+		str.push(',');
+	}
+
+	str.pop();
+	str
 }
 
 impl Display for Value {
@@ -61,14 +155,10 @@ impl Display for Value {
 			Value::Null => write!(f, "null"),
 			Value::True => write!(f, "true"),
 			Value::False => write!(f, "false"),
-			Value::String(x) => todo!(),
+			Value::String(x) => write!(f, "\"{}\"", escaped_string(x)),
 			Value::Number(x) => write!(f, "{}", x),
-			Value::Array(x) => {
-				todo!()
-			}
-			Value::Object(x) => {
-				todo!()
-			}
+			Value::Array(x) => write!(f, "[{}]", array_to_str(x)),
+			Value::Object(x) => write!(f, "{{{}}}", object_to_str(x)),
 		}
 	}
 }
@@ -77,6 +167,106 @@ impl Display for Value {
 mod tests {
 	use super::*;
 
+	#[test]
+	fn array_to_str_test() {
+		let vec: Vec<Value> = vec![];
+		assert_eq!(array_to_str(&vec), "");
+		let fixture = Value::from(vec);
+		assert_eq!(fixture.to_string(), "[]");
+
+		let mut vec: Vec<Value> = vec![Value::from("hello")];
+		assert_eq!(array_to_str(&vec), "\"hello\"");
+
+		vec.push(Value::from(100));
+		assert_eq!(array_to_str(&vec), "\"hello\",100");
+
+		vec.push(Value::from(42.195));
+		assert_eq!(array_to_str(&vec), "\"hello\",100,42.195");
+
+		vec.push(Value::True);
+		assert_eq!(array_to_str(&vec), "\"hello\",100,42.195,true");
+
+		vec.push(Value::False);
+		assert_eq!(array_to_str(&vec), "\"hello\",100,42.195,true,false");
+
+		vec.push(Value::Null);
+		assert_eq!(array_to_str(&vec), "\"hello\",100,42.195,true,false,null");
+
+		let fixture = Value::from(vec);
+		assert_eq!(
+			fixture.to_string(),
+			"[\"hello\",100,42.195,true,false,null]"
+		);
+	}
+
+	#[test]
+	fn object_to_str_test() {
+		todo!();
+	}
+
+	#[test]
+	fn escape_str_test() {
+		assert_eq!(escaped_string("hello\"world"), "hello\\\"world");
+		assert_eq!(escaped_string("hello\\world"), "hello\\\\world");
+
+		let mut vec: Vec<u8> = Vec::new();
+
+		for elem in b"hello" {
+			vec.push(*elem);
+		}
+		vec.push(0x08);
+
+		for elem in b"world" {
+			vec.push(*elem);
+		}
+
+		assert_eq!(
+			escaped_string(String::from_utf8(vec).unwrap().as_str()),
+			"hello\\bworld"
+		);
+
+		let mut vec: Vec<u8> = Vec::new();
+		for elem in b"hello" {
+			vec.push(*elem);
+		}
+
+		vec.push(0x0C);
+
+		for elem in b"world" {
+			vec.push(*elem);
+		}
+
+		assert_eq!(
+			escaped_string(String::from_utf8(vec).unwrap().as_str()),
+			"hello\\fworld"
+		);
+
+		assert_eq!(escaped_string("hello\nworld"), "hello\\nworld");
+		assert_eq!(escaped_string("hello\rworld"), "hello\\rworld");
+		assert_eq!(escaped_string("hello\tworld"), "hello\\tworld");
+
+		assert_eq!(escaped_string("hello world"), "hello world");
+		assert_eq!(escaped_string("今日は世界"), "今日は世界");
+
+		assert_eq!(escaped_string("今日は\\世界"), "今日は\\\\世界");
+	}
+
+	#[test]
+	fn is_contained_escaped_char_test() {
+		assert!(is_contained_escape_char("\""));
+		assert!(is_contained_escape_char("\\"));
+		assert!(is_contained_escape_char(
+			String::from_utf8(vec![0x08]).unwrap().as_str()
+		));
+		assert!(is_contained_escape_char(
+			String::from_utf8(vec![0x0C]).unwrap().as_str()
+		));
+		assert!(is_contained_escape_char("\n"));
+		assert!(is_contained_escape_char("\r"));
+		assert!(is_contained_escape_char("\t"));
+
+		assert!(!is_contained_escape_char("hello world"));
+	}
 	#[test]
 	fn from_str() {
 		let fixture = Value::from("hello");

@@ -1,0 +1,8 @@
+{"count":0,"cat":"summary","type":"intel","temp":0.00,"ordered":0,"unordered":0}
+{"count":32768,"cat":"summary","type":"intel","temp":0.00,"ordered":32768,"unordered":0}
+{"count":65536,"cat":"summary","type":"intel","temp":0.00,"ordered":65536,"unordered":0}
+{"count":98304,"cat":"summary","type":"intel","temp":0.00,"ordered":98304,"unordered":0}
+{"count":131072,"cat":"summary","type":"intel","temp":0.00,"ordered":131072,"unordered":0}
+{"count":163840,"cat":"summary","type":"intel","temp":0.00,"ordered":163840,"unordered":0}
+{"count":196608,"cat":"summary","type":"intel","temp":0.00,"ordered":196608,"unordered":0}
+{"count":229376,"cat":"summary","type":"intel","temp":0.00,"ordered":229376,"unordered":0}
